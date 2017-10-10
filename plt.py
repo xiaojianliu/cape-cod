@@ -1,135 +1,206 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug 04 09:21:18 2017
+Created on Sun Sep 17 22:02:04 2017
 
 @author: xiaojian
 """
-
-import sys
-import datetime as dt
-from matplotlib.path import Path
-import netCDF4
-import matplotlib.pyplot as plt
-from dateutil.parser import parse
 import numpy as np
-import math
+import datetime as dt
 import pandas as pd
 from datetime import datetime, timedelta
-from math import radians, cos, sin, atan, sqrt  
-from matplotlib.dates import date2num,num2date
-def haversine(lon1, lat1, lon2, lat2): 
-    """ 
-    Calculate the great circle distance between two points  
-    on the earth (specified in decimal degrees) 
-    """   
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])  
-    #print 34
-    dlon = lon2 - lon1   
-    dlat = lat2 - lat1   
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2  
-    c = 2 * atan(sqrt(a)/sqrt(1-a))   
-    r = 6371 
-    d=c * r
-    #print type(d)
-    return d
-lon=np.load('lonnnnn201360x.npy')
-lat=np.load('lattttt201360x.npy')
-time=np.load('time201360x.npy')
-FNCL='necscoast_worldvec.dat'
-CL=np.genfromtxt(FNCL,names=['lon','lat'])
-fig,axes=plt.subplots(1,2,figsize=(14,5))#,sharex=True)
+import matplotlib.pyplot as plt
+import mpl_toolkits.axisartist as AA
+from scipy import  interpolate
+from mpl_toolkits.axes_grid1 import host_subplot
+import csv
+deep_temp_dk01=np.load('deep_temp_dk01.npy')
+deep_temp_rm04=np.load('deep_temp_rm04.npy')
+deep_temp2013=np.load('deep_temp2013.npy')
+deep_time_dk01=np.load('deep_time_dk01.npy')
+deep_time_rm04=np.load('deep_time_rm04.npy')
+deep_time2013=np.load('deep_time2013.npy')
+surf_temp2012=np.load('surf_temp2012.npy')
+surf_temp2013=np.load('surf_temp2013.npy')
+surf_time2012=np.load('surf_time2012.npy')
+surf_time2013=np.load('surf_time2013.npy')
+tuttle_time_num_u2012=np.load('tuttle_time_num_u2012.npy')
+tuttle_time_num_u2013=np.load('tuttle_time_num_u2013.npy')
+tuttle_time_num_v2012=np.load('tuttle_time_num_v2012.npy')
+tuttle_time_num_v2013=np.load('tuttle_time_num_v2013.npy')
+tuttle_time_u2012=np.load('tuttle_time_u2012.npy')
+tuttle_time_u2013=np.load('tuttle_time_u2013.npy')
+tuttle_time_v2012=np.load('tuttle_time_v2012.npy')
+tuttle_time_v2013=np.load('tuttle_time_v2013.npy')
+wind_time_u2012=np.load('wind_time_u2012.npy')
+wind_time_u2013=np.load('wind_time_u2013.npy')
+wind_time_v2012=np.load('wind_time_v2012.npy')
+wind_time_v2013=np.load('wind_time_v2013.npy')
+wind_u2012=np.load('wind_u2012.npy')
+wind_u2013=np.load('wind_u2013.npy')
+wind_v2012=np.load('wind_v2012.npy')
+wind_v2013=np.load('wind_v2013.npy')
+tt0=[]
+tt1=[]
+yy0=[]
+yy1=[]
+for b in np.arange(len(deep_time_dk01.tolist())):
+    tt0.append((deep_time_dk01.tolist()[b]-datetime(2012,11,1)).days*24+(deep_time_dk01.tolist()[b]-datetime(2012,11,1)).seconds/float(60*60))
+for b in np.arange(len(deep_time_rm04.tolist())):   
+    tt1.append((deep_time_rm04.tolist()[b]-datetime(2012,11,1)).days*24+(deep_time_rm04.tolist()[b]-datetime(2012,11,1)).seconds/float(60*60))
 
-aa=0
-a7=0
-a8=0
-for a in np.arange(len(lon)):
-    
-    if len(lon[a])==1:
-        continue
-    else:
-        #aa=aa+1
-        if time[a][1]>datetime(2013,12,1) and time[a][-1]<datetime(2013,11,17):
-            a7=a
-            axes[0].scatter(lon[a][0],lat[a][0],color='red')
-            axes[0].scatter(lon[a][-1],lat[a][-1],color='green')
-            axes[0].plot(lon[a],lat[a],color='yellow',linewidth=0.5)
-        if time[a][1]<datetime(2013,12,1) and time[a][-1]<datetime(2013,11,17):
-            axes[0].scatter(lon[a][0],lat[a][0],color='red')
-            axes[0].scatter(lon[a][-1],lat[a][-1],color='green')
-            axes[0].plot(lon[a],lat[a],color='yellow',linewidth=0.5)
-axes[0].scatter(lon[a7][0],lat[a7][0],color='red',label='end point')
-axes[0].scatter(lon[a7][-1],lat[a7][-1],color='green',label='start point')
-axes[0].plot(lon[a7],lat[a7],color='yellow',linewidth=0.5,label='track')
-axes[0].legend()
-axes[0]. plot(CL['lon'],CL['lat'],linewidth=0.7)
-axes[0].axis([-71.0,-69.8,41.63,43.5])
-for a in np.arange(len(lon)):
-    
-    if len(lon[a])==1:
-        continue
-    else:
-        
-        if time[a][1]>datetime(2013,12,1) and time[a][-1]<datetime(2013,11,17):
-            aa=aa+1
-            axes[1].scatter(lon[a][0],lat[a][0],color='red')
-            axes[1].scatter(lon[a][-1],lat[a][-1],color='green')
-        if time[a][1]<datetime(2013,12,1) and time[a][-1]<datetime(2013,11,17):
-            aa=aa+1
-            plt.scatter(lon[a][0],lat[a][0],color='red')
-            plt.scatter(lon[a][-1],lat[a][-1],color='cyan')
-axes[1]. plot(CL['lon'],CL['lat'],linewidth=0.7)
-axes[1].axis([-71.0,-69.8,41.63,43.5])
-axes[0].xaxis.tick_top() 
-axes[1].xaxis.tick_top() 
-lon1=np.load('lonnnnn201260.npy')
-lat1=np.load('lattttt201260.npy')
-time1=np.load('timedian201260.npy')
-for a in np.arange(len(lon1)):
-    
-    if len(lon1[a])==1:
-        continue
-    else:
-        #aa=aa+1
-        if time1[a][1]>datetime(2012,12,1) and time1[a][-1]<datetime(2012,11,17):
-            axes[0].scatter(lon1[a][0],lat1[a][0],color='red')
-            axes[0].scatter(lon1[a][-1],lat1[a][-1],color='green')
-            axes[0].plot(lon1[a],lat1[a],color='yellow',linewidth=0.5)
-        if time1[a][1]<datetime(2012,12,1) and time1[a][-1]<datetime(2012,11,17):
-            axes[0].scatter(lon1[a][0],lat1[a][0],color='red')
-            axes[0].scatter(lon1[a][-1],lat1[a][-1],color='green')
-            axes[0].plot(lon1[a],lat1[a],color='yellow',linewidth=0.5)
-a4=0
-a5=0
-for a1 in np.arange(len(lon1)):
-    l=0
-    if len(lon1[a1])==1:
-        continue
-    else:
-        
-        if time1[a1][1]>datetime(2012,12,1) and time1[a1][-1]<datetime(2012,11,17):
-            aa=aa+1
-            a4=a1
-            axes[1].scatter(lon1[a1][0],lat1[a1][0],color='red')
-            axes[1].scatter(lon1[a1][-1],lat1[a1][-1],color='green')
-            for a2 in np.arange(len(lon1[a1])-1):
-                l=l+haversine(lon1[a1][a2],lat1[a1][a2],lon1[a1][a2+1],lat1[a1][a2+1])
-            #c=plt.Circle((lon1[a1][-1],lat1[a1][-1]),0.18*l*0.009009,color='green',alpha=0.2)
-            #axes[1].add_patch(c)
-        if time1[a1][1]<datetime(2012,12,1) and time1[a1][-1]<datetime(2012,11,17):
-            aa=aa+1
-            a5=a1
-            plt.scatter(lon1[a1][0],lat1[a1][0],color='red')
-            plt.scatter(lon1[a1][-1],lat1[a1][-1],color='cyan')
-            for a2 in np.arange(len(lon1[a1])-1):
-                l=l+haversine(lon1[a1][a2],lat1[a1][a2],lon1[a1][a2+1],lat1[a1][a2+1])
-            #c=plt.Circle((lon1[a1][-1],lat1[a1][-1]),0.18*l*0.009009,color='yellow',alpha=0.2)
-            #axes[1].add_patch(c)
-axes[1].scatter(lon1[a1][0],lat1[a1][0],color='red',label='end point')
-axes[1].scatter(lon1[a5][-1],lat1[a5][-1],color='cyan',label='start point')#(November)')
-axes[1].scatter(lon1[a4][-1],lat1[a4][-1],color='green',label='start point')#(December)')
-axes[1].set_xlabel('b')
-axes[0].set_xlabel('a')
-axes[1].set_yticklabels([])
+ff0 = interpolate.interp1d(tt0, deep_temp_dk01.tolist(), kind='cubic')
+ff1 = interpolate.interp1d(tt1, deep_temp_rm04.tolist(), kind='cubic')
+nx = np.linspace(1, int(tt1[-1]), int(tt1[-1]))
+tx=[]
+for aa in np.arange(len(nx)):
+    tx.append(datetime(2012,11,1)+timedelta(hours=nx[aa]))
+    yy0.append((ff0(nx[aa]).tolist()+ff1(nx[aa]).tolist())/2.0)
+    #yy1.append()
 
-axes[1].legend(loc='best')
-plt.savefig('track2012-2013',dpi=400)
+fig=plt.figure(figsize=(18,22))
+#ax1=fig.add_subplot(2,2,1)
+plt.subplots_adjust(hspace=0.2)
+host = host_subplot(411, axes_class=AA.Axes)
+plt.subplots_adjust(right=0.9)
+host.set_title('2012 eastward wind stress and temperture vs strandings on Outer Cape towns',fontsize=15)
+par1 = host.twinx()
+par2 = host.twinx()
+
+offset = 60
+new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+par2.axis["right"] = new_fixed_axis(loc="right", axes=par2,
+                                        offset=(offset, 0))
+par2.axis["right"].toggle(all=True)
+
+#host.set_xlim(0, 2)
+#host.set_ylim(0, 2)
+host.set_xlabel("a",fontsize=500)
+host.set_ylabel("pa",fontsize=15)
+par1.set_ylabel("Degrees Celsius",fontsize=15)
+par2.set_ylabel("number",fontsize=15)
+p1, = host.plot(wind_time_u2012,wind_u2012,'g', label="eastward wind stress")
+
+t2012m=[]
+te2012m=[]
+    #t2012m.append(np.mean(np.array(time2012).T)[a])
+#p2, = par1.plot(emolt2014time,emolt2014tem, label="bottom Temperature(emolt)")
+p2, = par1.plot(tx,yy0, label="bottom Temperature(emolt)")
+p6, = par1.plot(surf_time2012,surf_temp2012, label="surface Temperature(fvcom)")
+
+width1=datetime(2005,4,1,0,0,0)-datetime(2005,3,31,0,0,0)
+par2.bar(tuttle_time_u2012.tolist(),tuttle_time_num_u2012.tolist(),width=0.8,alpha=0.5,label="the number of strandings per day")
+host.legend(loc='upper left',fontsize=12)
+#plt.draw()
+'''
+plt.savefig('2012uunew',dpi=300)
+plt.show()
+'''
+############################################################################
+#ax1=fig.add_subplot(2,2,2)
+host = host_subplot(412, axes_class=AA.Axes)
+plt.subplots_adjust(right=0.75)
+host.set_title('2012 northward wind stress and temperture vs strandings on Mid Cape towns',fontsize=15)
+
+par1 = host.twinx()
+par2 = host.twinx()
+
+offset = 60
+new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+par2.axis["right"] = new_fixed_axis(loc="right", axes=par2,
+                                        offset=(offset, 0))
+par2.axis["right"].toggle(all=True)
+
+#host.set_xlim(0, 2)
+#host.set_ylim(0, 2)
+host.set_xlabel("b",fontsize=50)
+host.set_ylabel("pa",fontsize=15)
+par1.set_ylabel("Degrees Celsius",fontsize=20000000000000000)
+par2.set_ylabel("number",fontsize=15)
+p1, = host.plot(wind_time_v2012,wind_v2012,'g', label="northward wind stress")
+
+t2012m=[]
+te2012m=[]
+    #t2012m.append(np.mean(np.array(time2012).T)[a])
+p2, = par1.plot(tx,yy0, label="bottom Temperature(emolt)")#,fontsize=20)
+#p2.set_ylabel("Degrees Celsius",fontsize=20)
+p6,= par1.plot(surf_time2012,surf_temp2012, label="surface Temperature(fvcom)")
+
+width1=datetime(2005,4,1,0,0,0)-datetime(2005,3,31,0,0,0)
+par2.bar(tuttle_time_v2012.tolist(),tuttle_time_num_v2012.tolist(),width=0.8,alpha=0.5,label="the number of strandings per day")
+host.legend(loc='upper right',fontsize=12)
+#plt.draw()
+
+############################################################################
+#ax1=fig.add_subplot(2,2,2)
+
+host2 = host_subplot(413, axes_class=AA.Axes)
+plt.subplots_adjust(right=0.75)
+host2.set_title('2013 eastward wind stress and temperture vs strandings on Outer Cape towns',fontsize=15)
+
+par1 = host2.twinx()
+par2 = host2.twinx()
+
+offset = 60
+new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+par2.axis["right"] = new_fixed_axis(loc="right", axes=par2,
+                                        offset=(offset, 0))
+par2.axis["right"].toggle(all=True)
+
+#host.set_xlim(0, 2)
+#host.set_ylim(0, 2)
+host2.set_xlabel("c",fontsize=30)
+host2.set_ylabel("pa",fontsize=15)
+par1.set_ylabel("Degrees Celsius",fontsize=15)
+par2.set_ylabel("number",fontsize=15)
+p1, = host2.plot(wind_time_u2013,wind_u2013,'g', label="eastward wind stress")
+
+t2012m=[]
+te2012m=[]
+    #t2012m.append(np.mean(np.array(time2012).T)[a])
+#p2, = par1.plot(emolt2014time,emolt2014tem, label="bottom Temperature(emolt)")
+p2, = par1.plot(deep_time2013,deep_temp2013, label="bottom Temperature(emolt)")
+
+p6, = par1.plot(surf_time2013,surf_temp2013, label="surface Temperature(fvcom)")
+
+width1=datetime(2005,4,1,0,0,0)-datetime(2005,3,31,0,0,0)
+par2.bar(tuttle_time_num_u2013.tolist(),tuttle_time_u2013.tolist(),width=0.8,alpha=0.5,label="the number of strandings per day")
+host2.legend(loc='upper right',fontsize=12)
+plt.draw()
+
+############################################################################
+#ax1=fig.add_subplot(2,2,2)
+
+host2 = host_subplot(414, axes_class=AA.Axes)
+plt.subplots_adjust(right=0.75)
+host2.set_title('2013 northward wind stress and temperture vs strandings on Mid Cape towns',fontsize=15)
+
+par1 = host2.twinx()
+par2 = host2.twinx()
+
+offset = 60
+new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+par2.axis["right"] = new_fixed_axis(loc="right", axes=par2,
+                                        offset=(offset, 0))
+par2.axis["right"].toggle(all=True)
+
+#host.set_xlim(0, 2)
+#host.set_ylim(0, 2)
+host2.set_xlabel("d",fontsize=30)
+host2.set_ylabel("pa",fontsize=15)
+par1.set_ylabel("Degrees Celsius",fontsize=15)
+par2.set_ylabel("number",fontsize=15)
+p1, = host2.plot(wind_time_v2013,wind_v2013,'g', label="north wind stress")
+
+t2012m=[]
+te2012m=[]
+    #t2012m.append(np.mean(np.array(time2012).T)[a])
+p2, = par1.plot(deep_time2013,deep_temp2013, label="bottom Temperature(emolt)")
+p6, = par1.plot(surf_time2013,surf_temp2013, label="surface Temperature(fvcom)")
+
+width1=datetime(2005,4,1,0,0,0)-datetime(2005,3,31,0,0,0)
+par2.bar(tuttle_time_num_v2013.tolist(),tuttle_time_v2013.tolist(),width=0.8,alpha=0.5,label="the number of strandings per day")
+host2.legend(loc='best',fontsize=12)
+plt.draw()
+plt.savefig('2012uunew',dpi=100)
+plt.show()
+
